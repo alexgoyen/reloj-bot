@@ -55,12 +55,13 @@ jobs:
             return 1
           }
           if [ "$MODO" = "prueba" ]; then lanzar; exit $?; fi
+          inicio=$(date +%s)   # el límite cuenta desde aquí, espera inicial incluida
 
           case "$ESPERA" in ''|*[!0-9]*) ESPERA=0 ;; esac
           [ "$ESPERA" -gt 1800 ] && ESPERA=1800
           [ "$ESPERA" -gt 0 ] && { echo "Espero ${ESPERA}s hasta el siguiente turno"; sleep "$ESPERA"; }
 
-          fin=$(( $(date +%s) + 335*60 ))
+          fin=$(( inicio + 330*60 ))
           fallos=0
           while :; do
             if lanzar; then fallos=0; else fallos=$((fallos+1)); fi
