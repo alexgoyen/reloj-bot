@@ -54,6 +54,11 @@ jobs:
             echo "::warning::$(date -u +%H:%MZ) fallo al lanzar (HTTP $code): $(head -c 300 /tmp/r.txt 2>/dev/null)"
             return 1
           }
+          toca() {  # cada 30 min de domingo 18:00 a jueves 06:00 UTC (cuando salen las señales); cada hora el resto
+            d=$(date -u +%u); h=$((10#$(date -u +%H)))
+            if [ "$d" -le 3 ] || { [ "$d" -eq 7 ] && [ "$h" -ge 18 ]; } || { [ "$d" -eq 4 ] && [ "$h" -lt 6 ]; }; then return 0; fi
+            [ $(( $(date -u +%s) / 1800 % 2 )) -eq 0 ]
+          }
           if [ "$MODO" = "prueba" ]; then lanzar; exit $?; fi
           inicio=$(date +%s)   # el límite cuenta desde aquí, espera inicial incluida
 
@@ -64,7 +69,11 @@ jobs:
           fin=$(( inicio + 330*60 ))
           fallos=0
           while :; do
-            if lanzar; then fallos=0; else fallos=$((fallos+1)); fi
+            if toca; then
+              if lanzar; then fallos=0; else fallos=$((fallos+1)); fi
+            else
+              echo "$(date -u +%H:%MZ) turno libre (de jueves a domingo el bot va cada hora)"
+            fi
             if [ "$fallos" -ge 3 ]; then echo "::error::3 fallos seguidos: revisa BOT_TOKEN"; exit 1; fi
             ultimo=$(date +%s)
             [ $(( ultimo + 1800 )) -gt "$fin" ] && break
